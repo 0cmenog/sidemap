@@ -3,6 +3,7 @@ import networkx as nx
 from colorama import Fore
 import re
 import gravis as gv
+from math import log
 
 # list of char to remove at the end of a URL
 lastSpecChar = "/#?"
@@ -47,7 +48,7 @@ def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
     
     # add starting nodes
     for url in graph.keys():
-        g.add_node(url)
+        g.add_node(url, size=(10*log(graph[url]["internal"]["nodeSize"])))
 
     # add edges and attributes
     for url, linksAndProps in graph.items():
@@ -57,7 +58,7 @@ def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
                 for value in values:
                     g.add_edge(url,value)
         # add attributes
-        nx.set_node_attributes(g, {url: {"click": '\n'.join(linksAndProps["props"]["outOfScopeURLs"])}})
+        nx.set_node_attributes(g, {url: {"click": '\n'.join(linksAndProps["outOfScopeURLs"])}})
     return g
 
 def drawGravis(graph: nx.classes.digraph.DiGraph, dim: int = 2, tree: bool = False, xCoef: int = 1, yCoef: int = 1) -> None:

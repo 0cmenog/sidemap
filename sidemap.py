@@ -34,19 +34,18 @@ def main():
     cacheDir = "cache"
     cacheFilename = re.sub("/", "_", toVisitUrls[0].page)+'.cache'
 
-    # {<page>: {links: [], props: {outOfScopeURLs: [], getParams: {key: value}, postParams: {key: value}}}}
-    graph = {"recap": {"links": [], "props": {"outOfScopeURLs": [], "getParams": {}, "postParams": {}}}}
+    graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}}
     depth = 0
     userAgent = 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5'
     sizeToVisitUrl = len(toVisitUrls)
 
     if not(cacheFile):
         for url in toVisitUrls:
-            graph["recap"]["props"]["outOfScopeURLs"].append(url.page)
+            graph["recap"]["outOfScopeURLs"].append(url.page)
             alreadyAddedPages = [url.page]
 
             if(depth < maxDepth and url.isUrl()):
-                graph[url.page] = {"links": [], "props": {"outOfScopeURLs": [], "getParams": {}, "postParams": {}}}
+                if not(url.page in graph): graph[url.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 1}}
                 utils.printVerb(verbosity, 'W', "On page " + url.url)
                 # get page code
                 try:
@@ -69,24 +68,31 @@ def main():
                         # foundUrl is a new one
                         else:
                             # foundUrl is from a website to map
-                            if (url.domain in foundUrl.page) and not(foundUrl.getExtension() in banExts):
+                            if (url.domain in foundUrl.domain) and not(foundUrl.getExtension() in banExts):
                                 utils.printVerb(verbosity, 'G', "[+] Found a new page to map " + foundUrl.url)
                                 graph[url.page]["links"].append(foundUrl.page)
-                                if not(foundUrl in toVisitUrls):
-                                    toVisitUrls.append(foundUrl)
+                                # increase degree of the target node
+                                if foundUrl.page in graph:
+                                    graph[foundUrl.page]["internal"]["nodeSize"] += 1
+                                else:
+                                    graph[foundUrl.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
+                                # add the found URL to the list of URL to visit
+                                if not(foundUrl in toVisitUrls): toVisitUrls.append(foundUrl)
                             
                             else:
                                 # foundUrl is not from a website to map or is a file that cannot be read (eg. picture)
                                 # add foundURL to url's props
                                 utils.printVerb(verbosity, 'G', "[+] Found property page " + foundUrl.url)
-                                graph[url.page]["props"]["outOfScopeURLs"].append(foundUrl.page)
+                                graph[url.page]["outOfScopeURLs"].append(foundUrl.page)
                         alreadyAddedPages.append(foundUrl.page)
 
                 if(toVisitUrls.index(url)+1 == sizeToVisitUrl):
                     depth += 1
                     sizeToVisitUrl = len(toVisitUrls)
+
+                graph[url.page]["internal"]["nodeSize"] += len(graph[url.page]["links"])
         
-        graph["recap"]["props"]["outOfScopeURLs"].sort(key=str.lower)
+        graph["recap"]["outOfScopeURLs"].sort(key=str.lower)
 
     else:
         try:

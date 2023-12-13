@@ -154,13 +154,12 @@ Done:
 - [x] Manage extensions to ban
 - [x] Put out of scope URL in the properties of the linked node
 - [x] Robust given URL parsing (URL encoding, URL parameters, hostname, domain name)
+- [x] Size of a node proportional to its total degree
 
 Coming soon:
 - [ ] Colouring node according to the extension
-- [ ] Depth level in the node attributes
 - [ ] Edge thickness proportional to the quantity of references between pages
 - [ ] Option `--large/--no-large` to have nodes domain name/hostname related
-- [ ] Size of a node proportional to its total degree
 
 Need more time:
 - [ ] Automatically generated code documentation
