@@ -1,0 +1,5 @@
+colorama==0.4.6
+gravis==0.1.0
+networkx==3.2.1
+pygraphviz==1.11
+validators==0.22.0
