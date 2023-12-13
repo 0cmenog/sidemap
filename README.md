@@ -147,6 +147,7 @@ The menu can be hidden. It is a panel of settings to interactively adapt the gra
 # Roadmap
 
 Done:
+- [x] List all related pages in an unlinked node
 - [x] Manage cache files
 - [x] Manage depth
 - [x] Manage edge size
@@ -158,7 +159,6 @@ Coming soon:
 - [ ] Colouring node according to the extension
 - [ ] Depth level in the node attributes
 - [ ] Edge thickness proportional to the quantity of references between pages
-- [ ] List all related pages in an unlinked node
 - [ ] Option `--large/--no-large` to have nodes domain name/hostname related
 - [ ] Size of a node proportional to its total degree
 

@@ -35,13 +35,14 @@ def main():
     cacheFilename = re.sub("/", "_", toVisitUrls[0].page)+'.cache'
 
     # {<page>: {links: [], props: {outOfScopeURLs: [], getParams: {key: value}, postParams: {key: value}}}}
-    graph = {}
+    graph = {"recap": {"links": [], "props": {"outOfScopeURLs": [], "getParams": {}, "postParams": {}}}}
     depth = 0
     userAgent = 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5'
     sizeToVisitUrl = len(toVisitUrls)
 
     if not(cacheFile):
         for url in toVisitUrls:
+            graph["recap"]["props"]["outOfScopeURLs"].append(url.page)
             alreadyAddedPages = [url.page]
 
             if(depth < maxDepth and url.isUrl()):
@@ -84,6 +85,8 @@ def main():
                 if(toVisitUrls.index(url)+1 == sizeToVisitUrl):
                     depth += 1
                     sizeToVisitUrl = len(toVisitUrls)
+        
+        graph["recap"]["props"]["outOfScopeURLs"].sort(key=str.lower)
 
     else:
         try:
