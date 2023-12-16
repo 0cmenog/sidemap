@@ -160,12 +160,14 @@ Coming soon:
 - [ ] Colouring node according to the extension
 - [ ] Edge thickness proportional to the quantity of references between pages
 - [ ] Option `--large/--no-large` to have nodes domain name/hostname related
+- [ ] Manage dots (`./` and `../`) in the URL
 
 Need more time:
 - [ ] Automatically generated code documentation
 - [ ] Loading bar
 - [ ] POST and GET parameters keys added to the nodes' attributes
 - [ ] Update regex to grab more than URL present in href attribute
+- [ ] Manage redirections
 
 
 # Contribute
