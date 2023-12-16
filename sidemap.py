@@ -1,4 +1,3 @@
-from urllib.request import Request, urlopen
 import argparse
 import ast
 from url import URL
@@ -36,7 +35,6 @@ def main():
 
     graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}}
     depth = 0
-    userAgent = 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5'
     sizeToVisitUrl = len(toVisitUrls)
 
     if not(cacheFile):
@@ -49,9 +47,7 @@ def main():
                 utils.printVerb(verbosity, 'W', "On page " + url.url)
                 # get page code
                 try:
-                    req = Request(url.url)
-                    req.add_header('User-Agent', userAgent)
-                    page = urlopen(req).read().decode('utf-8')
+                    page = utils.doRequest(url.url)
                 except:
                     utils.printVerb(verbosity, 'R', "[-] URL " + url.url + " is not recognized")
                     continue
@@ -68,14 +64,11 @@ def main():
                         # foundUrl is a new one
                         else:
                             # foundUrl is from a website to map
-                            if (url.domain in foundUrl.domain) and not(foundUrl.getExtension() in banExts):
+                            if utils.isInScope(url.domain, foundUrl.domain) and not(foundUrl.getExtension() in banExts):
                                 utils.printVerb(verbosity, 'G', "[+] Found a new page to map " + foundUrl.url)
                                 graph[url.page]["links"].append(foundUrl.page)
                                 # increase degree of the target node
-                                if foundUrl.page in graph:
-                                    graph[foundUrl.page]["internal"]["nodeSize"] += 1
-                                else:
-                                    graph[foundUrl.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
+                                graph = utils.increaseNodeDegree(foundUrl.page, graph)
                                 # add the found URL to the list of URL to visit
                                 if not(foundUrl in toVisitUrls): toVisitUrls.append(foundUrl)
                             

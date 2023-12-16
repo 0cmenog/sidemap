@@ -4,9 +4,12 @@ from colorama import Fore
 import re
 import gravis as gv
 from math import log
+from urllib.request import Request, urlopen
 
 # list of char to remove at the end of a URL
 lastSpecChar = "/#?"
+# user agent used in the request
+userAgent = 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5'
 
 ## search for url
 
@@ -31,6 +34,13 @@ def removeLastSpecialChar(string: str) -> str:
     return string[:-1] if string[-1] in lastSpecChar else string
 
 ## graph
+
+def increaseNodeDegree(page: str, graph: {}) -> {}:
+    if page in graph:
+        graph[page]["internal"]["nodeSize"] += 1
+    else:
+        graph[page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
+    return graph
 
 def treefy(graph: nx.classes.digraph.DiGraph, xCoef: int = 1, yCoef: int = 1) -> nx.classes.digraph.DiGraph:
     # calculate layout to have a tree graph
@@ -85,6 +95,14 @@ def printVerb(verbosity: bool, color: str = 'N', message: str = "") -> None:
             print(Fore.WHITE + message)
         else:
             print(Fore.RESET + message)
+
+def doRequest(url: str) -> str:
+    req = Request(url)
+    req.add_header('User-Agent', userAgent)
+    return(urlopen(req).read().decode('utf-8'))
+
+def isInScope(refDomain: str, domain: str) -> bool:
+    return re.match("(\.|^)"+refDomain, domain)
 
 ## meta
 
