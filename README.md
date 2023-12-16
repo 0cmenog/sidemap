@@ -147,6 +147,7 @@ The menu can be hidden. It is a panel of settings to interactively adapt the gra
 # Roadmap
 
 Done:
+- [x] Colouring node according to the extension
 - [x] List all related pages in an unlinked node
 - [x] Manage cache files
 - [x] Manage depth
@@ -157,17 +158,16 @@ Done:
 - [x] Size of a node proportional to its total degree
 
 Coming soon:
-- [ ] Colouring node according to the extension
 - [ ] Edge thickness proportional to the quantity of references between pages
-- [ ] Option `--large/--no-large` to have nodes domain name/hostname related
 - [ ] Manage dots (`./` and `../`) in the URL
+- [ ] Option `--large/--no-large` to have nodes domain name/hostname related
 
 Need more time:
 - [ ] Automatically generated code documentation
 - [ ] Loading bar
+- [ ] Manage redirections
 - [ ] POST and GET parameters keys added to the nodes' attributes
 - [ ] Update regex to grab more than URL present in href attribute
-- [ ] Manage redirections
 
 
 # Contribute

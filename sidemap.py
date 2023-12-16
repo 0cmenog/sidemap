@@ -100,6 +100,7 @@ def main():
         with open(path.join(cacheDir, cacheFilename), 'w') as cf:
             cf.write(str(graph))
 
+    graph = utils.colorNodes(graph)
     g = utils.makeNXGraph(graph)
     utils.drawGravis(g, dim, tree, xcoef, ycoef)
 

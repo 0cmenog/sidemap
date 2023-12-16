@@ -33,6 +33,14 @@ def removeStartSlash(url: str) -> str:
 def removeLastSpecialChar(string: str) -> str:
     return string[:-1] if string[-1] in lastSpecChar else string
 
+def isFile(string: str) -> bool:
+    urlParts = string.split('/')
+    if len(urlParts) >= 2:
+        return '.' in urlParts[-1]
+
+def getExtension(string: str) -> str:
+    return string.split('.')[-1]
+
 ## graph
 
 def increaseNodeDegree(page: str, graph: {}) -> {}:
@@ -40,6 +48,27 @@ def increaseNodeDegree(page: str, graph: {}) -> {}:
         graph[page]["internal"]["nodeSize"] += 1
     else:
         graph[page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
+    return graph
+
+def colorNodes(graph: {}) -> {}:
+    # colors from matplotlib.colors.TABLEAU_COLORS
+    colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
+    foundExts = []
+    colorIndex = 0
+    for page in graph:
+        # add color for a file node
+        if isFile(page):
+            ext = getExtension(page)
+            if ext in foundExts:
+                color = colors[foundExts.index(ext) % len(colors)]
+            else:
+                color = colors[colorIndex % len(colors)]
+                colorIndex += 1
+                foundExts.append(ext)
+        # let page nodes in black
+        else:
+            color = "black"
+        graph[page]["internal"]["color"] = color
     return graph
 
 def treefy(graph: nx.classes.digraph.DiGraph, xCoef: int = 1, yCoef: int = 1) -> nx.classes.digraph.DiGraph:
@@ -58,7 +87,7 @@ def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
     
     # add starting nodes
     for url in graph.keys():
-        g.add_node(url, size=(10*log(graph[url]["internal"]["nodeSize"])))
+        g.add_node(url, size=(10*log(graph[url]["internal"]["nodeSize"])), color=graph[url]["internal"]["color"])
 
     # add edges and attributes
     for url, linksAndProps in graph.items():
