@@ -94,8 +94,8 @@ def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
         # add edges
         for key, values in linksAndProps.items():
             if(key == "links"):
-                for value in values:
-                    g.add_edge(url,value)
+                for value in set(values):
+                    g.add_edge(url, value, size=values.count(value))
         # add attributes
         nx.set_node_attributes(g, {url: {"click": '\n'.join(linksAndProps["outOfScopeURLs"])}})
     return g
@@ -128,6 +128,7 @@ def printVerb(verbosity: bool, color: str = 'N', message: str = "") -> None:
 def doRequest(url: str) -> str:
     req = Request(url)
     req.add_header('User-Agent', userAgent)
+
     return(urlopen(req).read().decode('utf-8'))
 
 def isInScope(refDomain: str, domain: str) -> bool:
