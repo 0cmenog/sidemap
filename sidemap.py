@@ -43,7 +43,7 @@ def main():
             alreadyAddedPages = [url.page]
 
             if(depth < maxDepth and url.isUrl()):
-                if not(url.page in graph): graph[url.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
+                if not(url.page in graph): graph[url.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 1}}
                 utils.printVerb(verbosity, 'W', "On page " + url.url)
                 # get page code
                 try:
@@ -61,7 +61,10 @@ def main():
                         # foundUrl has already been visited from this url
                         if foundUrl.page in alreadyAddedPages:
                             utils.printVerb(verbosity, 'Y', "[-] Found once again " + foundUrl.url)
-                            if utils.isInScope(url.domain, foundUrl.domain) and not(foundUrl.getExtension() in banExts): graph[url.page]["links"].append(foundUrl.page)
+                            if utils.isInScope(url.domain, foundUrl.domain) and not(foundUrl.getExtension() in banExts): 
+                                graph[url.page]["links"].append(foundUrl.page)
+                                # increase degree of the target node
+                                graph = utils.increaseNodeDegree(foundUrl.page, graph)
                         # foundUrl is a new one
                         else:
                             # foundUrl is from a website to map

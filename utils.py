@@ -47,6 +47,7 @@ def increaseNodeDegree(page: str, graph: {}) -> {}:
     if page in graph:
         graph[page]["internal"]["nodeSize"] += 1
     else:
+        # minimal nodeSize + 1
         graph[page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
     return graph
 
@@ -95,7 +96,7 @@ def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
         for key, values in linksAndProps.items():
             if(key == "links"):
                 for value in set(values):
-                    g.add_edge(url, value, size=values.count(value))
+                    g.add_edge(url, value, size=log(values.count(value)+1))
         # add attributes
         nx.set_node_attributes(g, {url: {"click": '\n'.join(linksAndProps["outOfScopeURLs"])}})
     return g

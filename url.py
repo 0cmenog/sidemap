@@ -52,6 +52,7 @@ class URL:
         urlParts = url.split('/')
         if len(urlParts) >= 2:
             return '.' in urlParts[-1]
+        return False
 
     ## construct from url
 
@@ -68,7 +69,7 @@ class URL:
     # can not have '/' at the end
     def _constructDomain(self, url: str) -> str:
         parts = self._constructHostname(url).split('.')
-        return '.'.join(parts[1:]) if len(parts) >= 2 else '.'.join(parts)
+        return '.'.join(parts[1:]) if len(parts) > 2 else '.'.join(parts)
 
     ## operations on url
 
