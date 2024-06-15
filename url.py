@@ -59,6 +59,7 @@ class URL:
     # have '/' at the end if not a file
     def _constructPage(self, url: str) -> str:
         url = re.sub("^((http|https)://)", "", url).split("#")[0].split("?")[0]
+        url = utils.removeDots(url)
         return url + ("" if (self._isFile(url) or url[-1] == "/") else "/")
 
     # can not have '/' at the end

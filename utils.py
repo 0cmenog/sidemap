@@ -41,6 +41,17 @@ def isFile(string: str) -> bool:
 def getExtension(string: str) -> str:
     return string.split('.')[-1]
 
+def removeDots(string: str) -> str:
+    # does not manage cases where ../ lead out of the domain 
+    parts = string.split("/")
+    for i in range(parts.count("..")):
+        parts.remove(parts[parts.index("..")-1])
+        parts.remove(parts[parts.index("..")])
+    for i in range(parts.count(".")):
+        parts.remove(parts[parts.index(".")])
+        
+    return "/".join(parts)
+
 ## graph
 
 def increaseNodeDegree(page: str, graph: {}) -> {}:
@@ -99,6 +110,9 @@ def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
                     g.add_edge(url, value, size=log(values.count(value)+1))
         # add attributes
         nx.set_node_attributes(g, {url: {"click": '\n'.join(linksAndProps["outOfScopeURLs"])}})
+    
+    g.nodes["recap"]["x"] = -300
+    g.nodes["recap"]["y"] = 300
     return g
 
 def drawGravis(graph: nx.classes.digraph.DiGraph, dim: int = 2, tree: bool = False, xCoef: int = 1, yCoef: int = 1) -> None:
@@ -129,7 +143,6 @@ def printVerb(verbosity: bool, color: str = 'N', message: str = "") -> None:
 def doRequest(url: str) -> str:
     req = Request(url)
     req.add_header('User-Agent', userAgent)
-
     return(urlopen(req).read().decode('utf-8'))
 
 def isInScope(refDomain: str, domain: str) -> bool:
