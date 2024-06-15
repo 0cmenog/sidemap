@@ -147,6 +147,7 @@ The menu can be hidden. It is a panel of settings to interactively adapt the gra
 # Roadmap
 
 Done:
+- [x] Allow custom cookies input
 - [x] Colouring node according to the extension
 - [x] Edge thickness proportional to the quantity of references between pages
 - [x] List all related pages in an unlinked node

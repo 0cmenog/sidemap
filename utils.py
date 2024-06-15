@@ -140,9 +140,10 @@ def printVerb(verbosity: bool, color: str = 'N', message: str = "") -> None:
         else:
             print(Fore.RESET + message)
 
-def doRequest(url: str) -> str:
+def doRequest(url: str, cookies: [] = []) -> str:
     req = Request(url)
     req.add_header('User-Agent', userAgent)
+    req.add_header('Cookie', "; ".join(cookies))
     return(urlopen(req).read().decode('utf-8'))
 
 def isInScope(refDomain: str, domain: str) -> bool:

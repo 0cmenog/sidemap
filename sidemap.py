@@ -14,9 +14,10 @@ def main():
     parser.add_argument("-dim", "--dimension", default=2, help="dimensions of the graph (2d/3d)")
     parser.add_argument("-x", "--xcoef", default=1, help="x-axis node gap coefficient")
     parser.add_argument("-y", "--ycoef", default=1, help="y-axis node gap coefficient")
-    parser.add_argument("-be", "--banexts", default=[], help="additional extensions to ban", nargs='+')
+    parser.add_argument("-be", "--banexts", default=["png", "jpg", "jpeg", "ico", "svg"], help="additional extensions to ban", nargs='+')
     parser.add_argument("-cr", "--cache-results", default=False, help="puts the result in a cache file", action=argparse.BooleanOptionalAction)
     parser.add_argument("-cf", "--cache-file", default=False, help="uses the appropriate cache file to load graph", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-c", "--cookie", default=[], help="space separated list of cookies to include to the request", nargs='+')
 
     args = parser.parse_args()
 
@@ -27,11 +28,12 @@ def main():
     dim = int(args.dimension)
     xcoef = float(args.xcoef)
     ycoef = float(args.ycoef)
-    banExts = args.banexts + ["png", "jpg", "jpeg", "ico", "svg"]
+    banExts = args.banexts
     cacheResult = bool(args.cache_results)
     cacheFile = bool(args.cache_file)
     cacheDir = "cache"
     cacheFilename = re.sub("/", "_", toVisitUrls[0].page)+'.cache'
+    cookies = args.cookie
 
     graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}}
     depth = 0
@@ -47,7 +49,7 @@ def main():
                 utils.printVerb(verbosity, 'W', "On page " + url.url)
                 # get page code
                 try:
-                    page = utils.doRequest(url.url)
+                    page = utils.doRequest(url.url, cookies=cookies)
                 except:
                     utils.printVerb(verbosity, 'R', "[-] URL " + url.url + " is not recognized")
                     continue
