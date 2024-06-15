@@ -152,6 +152,7 @@ Done:
 - [x] List all related pages in an unlinked node
 - [x] Manage cache files
 - [x] Manage depth
+- [x] Manage dots (`./` and `../`) in the URL
 - [x] Manage edge size
 - [x] Manage extensions to ban
 - [x] Put out of scope URL in the properties of the linked node
@@ -159,7 +160,6 @@ Done:
 - [x] Size of a node proportional to its total degree
 
 Coming soon:
-- [ ] Manage dots (`./` and `../`) in the URL
 - [ ] Option `--large/--no-large` to have nodes domain name/hostname related
 
 Need more time:
