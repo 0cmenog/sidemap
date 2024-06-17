@@ -1,5 +1,5 @@
 # What is sidemap?
-sidemap is a tool that provides an overview of a website via a graph representing all the paths accessible from one of its pages the others.
+sidemap is a tool that provides an overview of a website via a graph representing all the paths accessible from one of its pages.
 
 # Installation
 
@@ -158,6 +158,7 @@ Done:
 - [x] Manage extensions to ban
 - [x] Put out of scope URL in the properties of the linked node
 - [x] Robust given URL parsing (URL encoding, URL parameters, hostname, domain name)
+- [x] Search for well known pages
 - [x] Size of a node proportional to its total degree
 
 Coming soon:

@@ -35,11 +35,39 @@ def main():
     cacheFilename = re.sub("/", "_", toVisitUrls[0].page)+'.cache'
     cookies = args.cookie
 
-    graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}}
+    wellKnowns = [URL(knownPage, refUrl=toVisitUrls[0]) for knownPage in ["robots.txt", "security.txt", "sitemap.xml", "xmlrpc.php", "wp-admin/login.php", "wp-admin/wp-login.php", "login.php", "wp-login.php", "admin"]]
+    graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}, "known pages": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}, toVisitUrls[0].page: {"links": ["known pages"], "outOfScopeURLs": [], "internal": {"nodeSize": 1}}}
     depth = 0
     sizeToVisitUrl = len(toVisitUrls)
 
     if not(cacheFile):
+        # well known pages
+        for wellKnown in wellKnowns:
+            try:
+                statusCode = utils.getStatusCode(wellKnown.url)
+            except:
+                utils.printVerb(verbosity, 'R', "[-] Error with the URL " + wellKnown.url)
+                continue
+
+            # if page exists
+            if statusCode == 200:
+                utils.printVerb(verbosity, 'G', "[+] Found known page " + wellKnown.url)
+
+                # add to the recap and known pages
+                graph["recap"]["outOfScopeURLs"].append(wellKnown.page)
+                graph["known pages"]["outOfScopeURLs"].append(wellKnown.page)
+
+                # create and link a new node for the known page
+                graph[wellKnown.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
+                graph["known pages"]["links"].append(wellKnown.page)
+
+                # increase known pages node degree
+                graph["known pages"]["internal"]["nodeSize"] += 1
+
+            else:
+                utils.printVerb(verbosity, 'Y', "[-] Known page " + wellKnown.url + " returned " + str(statusCode))            
+
+        # other URL on the page
         for url in toVisitUrls:
             graph["recap"]["outOfScopeURLs"].append(url.page)
             alreadyAddedPages = [url.page]
@@ -107,7 +135,7 @@ def main():
             cf.write(str(graph))
 
     graph = utils.colorNodes(graph)
-    g = utils.makeNXGraph(graph)
+    g = utils.makeNXGraph(graph, toVisitUrls[0].page)
     utils.drawGravis(g, dim, tree, xcoef, ycoef)
 
 if __name__ == "__main__":

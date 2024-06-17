@@ -11,6 +11,7 @@ lastSpecChar = "/#?"
 # user agent used in the request
 userAgent = 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5'
 
+
 ## search for url
 
 def findUrls(page: str) -> []:
@@ -94,22 +95,26 @@ def treefy(graph: nx.classes.digraph.DiGraph, xCoef: int = 1, yCoef: int = 1) ->
 
     return graph
 
-def makeNXGraph(graph: {}) -> nx.classes.digraph.DiGraph:
+def makeNXGraph(graph: {}, root: str = "") -> nx.classes.digraph.DiGraph:
     g = nx.DiGraph()
     
     # add starting nodes
-    for url in graph.keys():
-        g.add_node(url, size=(10*log(graph[url]["internal"]["nodeSize"])), color=graph[url]["internal"]["color"])
+    for page in graph.keys():
+        g.add_node(page, size=(10*log(graph[page]["internal"]["nodeSize"])), color=graph[page]["internal"]["color"])
 
     # add edges and attributes
-    for url, linksAndProps in graph.items():
+    for page, linksAndProps in graph.items():
         # add edges
         for key, values in linksAndProps.items():
             if(key == "links"):
                 for value in set(values):
-                    g.add_edge(url, value, size=log(values.count(value)+1))
+                    if page == root and value == "known pages":
+                        color = "lightgrey"
+                    else: 
+                        color = "black"
+                    g.add_edge(page, value, size=log(values.count(value)+1), color=color)
         # add attributes
-        nx.set_node_attributes(g, {url: {"click": '\n'.join(linksAndProps["outOfScopeURLs"])}})
+        nx.set_node_attributes(g, {page: {"click": '\n'.join(linksAndProps["outOfScopeURLs"])}})
     
     g.nodes["recap"]["x"] = -300
     g.nodes["recap"]["y"] = 300
@@ -145,6 +150,9 @@ def doRequest(url: str, cookies: [] = []) -> str:
     req.add_header('User-Agent', userAgent)
     req.add_header('Cookie', "; ".join(cookies))
     return(urlopen(req).read().decode('utf-8'))
+
+def getStatusCode(url: str) -> int:
+    return urlopen(url).getcode()
 
 def isInScope(refDomain: str, domain: str) -> bool:
     return re.match("(\.|^)"+refDomain, domain)
