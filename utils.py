@@ -4,7 +4,7 @@ from colorama import Fore
 import re
 import gravis as gv
 from math import log
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, HTTPError
 
 # list of char to remove at the end of a URL
 lastSpecChar = "/#?"
@@ -152,7 +152,11 @@ def doRequest(url: str, cookies: [] = []) -> str:
     return(urlopen(req).read().decode('utf-8'))
 
 def getStatusCode(url: str) -> int:
-    return urlopen(url).getcode()
+    try:
+        code = urlopen(url).code
+    except HTTPError as e:
+        code = e.code
+    return code
 
 def isInScope(refDomain: str, domain: str) -> bool:
     return re.match("(\.|^)"+refDomain, domain)
