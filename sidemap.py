@@ -1,6 +1,6 @@
 import argparse
 import ast
-from url import URL
+import url as urlmod
 import utils
 from os import path, makedirs
 import re
@@ -21,7 +21,7 @@ def main():
 
     args = parser.parse_args()
 
-    toVisitUrls = [URL(str(args.url), isRef=True)]
+    toVisitUrls = [urlmod.URL(str(args.url), isRef=True)]
     maxDepth = int(args.depth)
     verbosity = bool(args.verbose)
     tree = bool(args.tree)
@@ -35,8 +35,8 @@ def main():
     cacheFilename = re.sub("/", "_", toVisitUrls[0].page)+'.cache'
     cookies = args.cookie
 
-    wellKnowns = [URL(knownPage, refUrl=toVisitUrls[0]) for knownPage in ["robots.txt", "security.txt", "sitemap.xml", "xmlrpc.php", "wp-admin/login.php", "wp-admin/wp-login.php", "login.php", "wp-login.php", "admin"]]
-    graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}, "known pages": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}, toVisitUrls[0].page: {"links": ["known pages"], "outOfScopeURLs": [], "internal": {"nodeSize": 1}}}
+    wellKnowns = [urlmod.URL(knownPage, refUrl=toVisitUrls[0]) for knownPage in ["robots.txt", "security.txt", "sitemap.xml", "xmlrpc.php", "wp-admin/login.php", "wp-admin/wp-login.php", "login.php", "wp-login.php", "admin"]]
+    graph = {"recap": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 10}}, "known pages": {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}, toVisitUrls[0].page: {"links": [{"page": "known pages", "params": [], "method": "GET", "edgeSize": 2}], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}}
     depth = 0
     sizeToVisitUrl = len(toVisitUrls)
 
@@ -59,7 +59,7 @@ def main():
 
                 # create and link a new node for the known page
                 graph[wellKnown.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 2}}
-                graph["known pages"]["links"].append(wellKnown.page)
+                graph["known pages"]["links"].append({"page": wellKnown.page, "params": [], "method": "GET", "edgeSize": 2})
 
                 # increase known pages node degree
                 graph["known pages"]["internal"]["nodeSize"] += 1
@@ -70,48 +70,40 @@ def main():
         # other URL on the page
         for url in toVisitUrls:
             graph["recap"]["outOfScopeURLs"].append(url.page)
-            alreadyAddedPages = [url.page]
 
             if(depth < maxDepth and url.isUrl()):
                 if not(url.page in graph): graph[url.page] = {"links": [], "outOfScopeURLs": [], "internal": {"nodeSize": 1}}
                 utils.printVerb(verbosity, 'W', "On page " + url.url)
                 # get page code
                 try:
-                    page = utils.doRequest(url.url, cookies=cookies)
+                    pageCode = utils.doRequest(url.url, cookies=cookies)
                 except:
                     utils.printVerb(verbosity, 'R', "[-] URL " + url.url + " is not recognized")
                     continue
+                
                 # find urls
-                foundUrls = utils.findUrls(page)
+                urlsAndReqs = urlmod.findReqs(pageCode, url)
 
-                for foundUrl in foundUrls:
-                    foundUrl = URL(foundUrl, refUrl=url)
+                for urlAndReq in urlsAndReqs:
+                    foundUrl = urlmod.URL(urlAndReq[0], refUrl=url)
+                    foundReq = urlAndReq[1]
 
                     if foundUrl.isUrl():
-                        # foundUrl has already been visited from this url
-                        if foundUrl.page in alreadyAddedPages:
-                            utils.printVerb(verbosity, 'Y', "[-] Found once again " + foundUrl.url)
-                            if utils.isInScope(url.domain, foundUrl.domain) and not(foundUrl.getExtension() in banExts): 
-                                graph[url.page]["links"].append(foundUrl.page)
-                                # increase degree of the target node
-                                graph = utils.increaseNodeDegree(foundUrl.page, graph)
-                        # foundUrl is a new one
+                        # foundUrl is from a website to map
+                        if utils.isInScope(url.domain, foundUrl.domain) and not(foundUrl.getExtension() in banExts):
+                            utils.printVerb(verbosity, 'G', "[+] Found a new page to map " + foundUrl.url)
+                            graph[url.page]["links"].append(foundReq)
+                            # increase degree of the target node
+                            graph = utils.increaseNodeDegree(foundUrl.page, graph, foundReq["edgeSize"])
+                            # add the found URL to the list of URL to visit
+                            if not(foundUrl in toVisitUrls): 
+                                toVisitUrls.append(foundUrl)
+                        
                         else:
-                            # foundUrl is from a website to map
-                            if utils.isInScope(url.domain, foundUrl.domain) and not(foundUrl.getExtension() in banExts):
-                                utils.printVerb(verbosity, 'G', "[+] Found a new page to map " + foundUrl.url)
-                                graph[url.page]["links"].append(foundUrl.page)
-                                # increase degree of the target node
-                                graph = utils.increaseNodeDegree(foundUrl.page, graph)
-                                # add the found URL to the list of URL to visit
-                                if not(foundUrl in toVisitUrls): toVisitUrls.append(foundUrl)
-                            
-                            else:
-                                # foundUrl is not from a website to map or is a file that cannot be read (eg. picture)
-                                # add foundURL to url's props
-                                utils.printVerb(verbosity, 'G', "[+] Found property page " + foundUrl.url)
-                                graph[url.page]["outOfScopeURLs"].append(foundUrl.page)
-                        alreadyAddedPages.append(foundUrl.page)
+                            # foundUrl is not from a website to map or is a file that cannot be read (eg. picture)
+                            # add foundURL to url's props
+                            utils.printVerb(verbosity, 'G', "[+] Found property page " + foundUrl.url)
+                            if not(foundUrl.page in graph[url.page]["outOfScopeURLs"]): graph[url.page]["outOfScopeURLs"].append(foundUrl.page)
 
                 if(toVisitUrls.index(url)+1 == sizeToVisitUrl):
                     depth += 1
@@ -119,7 +111,7 @@ def main():
 
                 graph[url.page]["internal"]["nodeSize"] += len(graph[url.page]["links"])
         
-        graph["recap"]["outOfScopeURLs"].sort(key=str.lower)
+        graph["recap"]["outOfScopeURLs"] = sorted(list(set(graph["recap"]["outOfScopeURLs"])), key=str.lower)
 
     else:
         try:
@@ -134,8 +126,10 @@ def main():
         with open(path.join(cacheDir, cacheFilename), 'w') as cf:
             cf.write(str(graph))
 
+    graph = utils.computeGlobalLinkSize(graph)
     graph = utils.colorNodes(graph)
-    g = utils.makeNXGraph(graph, toVisitUrls[0].page)
+    graph = utils.colorEdges(graph, toVisitUrls[0].page)
+    g = utils.makeNXGraph(graph)
     utils.drawGravis(g, dim, tree, xcoef, ycoef)
 
 if __name__ == "__main__":

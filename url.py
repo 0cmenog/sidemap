@@ -2,6 +2,7 @@ import re
 import validators
 import utils
 from urllib.parse import unquote
+from bs4 import BeautifulSoup
 
 class URL:
     """Class that defines different forms and operations for a URL"""
@@ -28,6 +29,8 @@ class URL:
         self.hostname = self._constructHostname(self.url)
         # domain.tld
         self.domain = self._constructDomain(self.url)
+        # ["key1=value1", "key2=value2"]
+        self.params = self._constructParams(self.url)
 
     def __eq__(self, other): 
         if not isinstance(other, URL):
@@ -72,6 +75,10 @@ class URL:
         parts = self._constructHostname(url).split('.')
         return '.'.join(parts[1:]) if len(parts) > 2 else '.'.join(parts)
 
+    def _constructParams(self, url: str) -> []:
+        parts = url.split('?')
+        return [" "] if len(parts) == 1 else parts[1].split('&')
+
     ## operations on url
 
     def _urlDecode(self, string: str) -> str:
@@ -88,10 +95,48 @@ class URL:
             # WARNING: we suppose that pages to visit are always under the same hostname
             # otherwise, we should adapt the prefix to the reference of the relative path
             if utils.matchScheme(url) == None:
-                return utils.addScheme(ref.hostname+"/"+utils.removeStartSlash(url))
+                if url.startswith(ref.hostname):
+                    return utils.addScheme(utils.removeStartSlash(url))
+                else:
+                    return utils.addScheme(ref.hostname+"/"+utils.removeStartSlash(url))
             elif url.startswith("//"):
                 return utils.addScheme(url[2:])
             # if absolute reference
             else:
                 return url
 
+
+## search for url
+
+def findReqs(page: str, refUrl: str) -> []:
+    soup = BeautifulSoup(page, features="html.parser")
+    # [{"page": "example.com", "params": ["key1=value1", "key2=value2"], "method": "GET", "edgeSize": 1}]
+    rets = []
+    # a tags
+    for a in soup.find_all('a'):
+        if a.get('href') == None: continue
+        aUrl = URL(a.get('href'), refUrl=refUrl)
+        rets.append((a.get('href'), {"page": aUrl.page, "params": aUrl.params, "method": "GET", "edgeSize": 2}))
+
+    # script sources
+    for script in soup.find_all('script'):
+        if script.get('src') == None: continue
+        rets.append((script.get('src'), {"page": URL(script.get('src'), refUrl=refUrl).page, "params": [" "], "method": "GET", "edgeSize": 2}))
+
+    # form tags
+    for form in soup.find_all('form'):
+        if form.get('action') == None: continue
+        # method
+        method = "GET" if form.get('method') == None else form.get('method').upper()
+        # params
+        params = []
+        inputs = form.findChildren('input')
+        for inp in inputs:
+            params.append(str(inp.get('name'))+"="+str(inp.get("value")))
+        # construct dict (min edgeSize = 2, due to log in the computation of the representatin of the thickness)
+        rets.append((form.get('action'), {"page": URL(form.get('action'), refUrl=refUrl).page, "params": [" "] if params == [] else params, "method": method, "edgeSize": 2}))
+
+    # [(url1, link1), (url2, link2), ...]
+    rets = utils.computeLinkSize(rets)
+
+    return rets
